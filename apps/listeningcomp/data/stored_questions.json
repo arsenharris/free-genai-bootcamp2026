@@ -1,0 +1,197 @@
+{
+"20260301_204812": {
+    "question": {
+    "Options": [
+        "Comer pizza",
+        "Comer hamburguesa",
+        "Comer ensalada",
+        "Comer pasta"
+    ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2026-03-01 20:48:12",
+    "audio_file": null
+},
+"20260301_205218": {
+    "question": {
+    "Options": [
+        "Comer pizza",
+        "Comer hamburguesa",
+        "Comer ensalada",
+        "Comer pasta"
+    ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2026-03-01 20:52:18",
+    "audio_file": null
+},
+"20260301_205311": {
+    "question": {
+    "Introduction": "En la tienda de ropa, una mujer y un empleado están hablando. ¿Qué va a comprar la mujer?",
+    "Conversation": "Disculpe, ¿esto es prendas? No, esto es accesorios. ¿Ah, ya veo? Esto es blusas. ¿Ah, ya veo? Sí, aquí están las blusas.",
+    "Question": {
+        "opt1": "Blusas",
+        "opt2": "Accesorios",
+        "opt3": "Pendientes",
+        "opt4": "Bolsos"
+    },
+    "Answer": 1,
+    "Options": [
+        "Comer pizza",
+        "Comer hamburguesa",
+        "Comer ensalada",
+        "Comer pasta"
+    ]
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2026-03-01 20:53:11",
+    "audio_file": null
+},
+"20260301_205808": {
+    "question": {
+    "Introduction": "La mujer está intentando ir al supermercado con su cartera.",
+    "Conversation": "¿Yamada, ¿qué piensas hacer? No hay nada que hacer. ¿Quieres ir a la tienda o quedarte aquí?",
+    "Question": "¿Qué piensa Yamada?",
+    "Options": [
+        "Voy a ir a la tienda",
+        "Quedo aquí",
+        "No sé",
+        "Pregúntame al supermercado"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2026-03-01 20:58:08",
+    "audio_file": null
+},
+"20260301_205941": {
+    "question": {
+    "Introduction": "La mujer está intentando ir al supermercado con su cartera.",
+    "Conversation": "¿Yamada, ¿qué piensas hacer? No hay nada que hacer. ¿Quieres ir a la tienda o quedarte aquí?",
+    "Question": "¿Qué piensa Yamada?",
+    "Options": [
+        "Voy a ir a la tienda",
+        "Quedo aquí",
+        "No sé",
+        "Pregúntame al supermercado"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2026-03-01 20:59:41",
+    "audio_file": "/Users/lycia/Coding/AI_Bootcamp/free-genai-bootcamp-2026/listening-comp/frontend/static/audio/question_20260301_205938.mp3"
+},
+"20260301_210518": {
+    "question": {
+    "Introduction": "La mujer está preguntando qué va a beber al hombre",
+    "Conversation": "El hombre dice que no hay bebidas, pero la mujer le hace una pregunta sobre su gusto",
+    "Question": "¿Qué va a beber la mujer?",
+    "Options": [
+        "bebida",
+        "café",
+        "agua",
+        "tés"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Shopping",
+    "created_at": "2026-03-01 21:05:18",
+    "audio_file": null
+},
+"20260301_210818": {
+    "question": {
+    "Introduction": "En un viaje, un pasajero y una guía están hablando. ¿Qué tipo de comida va a comer el pasajero?",
+    "Conversation": "A la parada del tren, el pasajero dijo al guía: ¿Cuánto tiempo te toma llegar a mi destino?",
+    "Question": "¿Cuánto tiempo toma llegar a mi destino?",
+    "Options": [
+        "el coche",
+        "las bicicletas",
+        "la autobús",
+        "los taxis"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Travel",
+    "created_at": "2026-03-01 21:08:18",
+    "audio_file": null
+},
+"20260301_211045": {
+    "question": {
+    "Introduction": "La mujer planeó beber jugo y té.",
+    "Conversation": "Ah, Yamada, ¿qué quieres beber?",
+    "Question": "¿Qué va a beber la mujer?",
+    "Options": [
+        "Jugo",
+        "Té",
+        "Cerveza",
+        "Vino"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Travel",
+    "created_at": "2026-03-01 21:10:45",
+    "audio_file": null
+},
+"20260301_211306": {
+    "question": {
+    "Introduction": "Una familia viajó a España por primera vez. ¿Por dónde están llegando?",
+    "Conversation": "La familia se siente emocionada al respecto de esta nueva aventura",
+    "Question": "¿Por dónde están llegando?",
+    "Options": [
+        "Puerto Rico",
+        "Málaga",
+        "Valencia",
+        "Barcelona"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Travel",
+    "created_at": "2026-03-01 21:13:06",
+    "audio_file": null
+},
+"20260301_211848": {
+    "question": {
+    "Introduction": "En un restaurante, una persona y un empleado están hablando sobre qué comer",
+    "Conversation": "Disculpe, ¿esto es pollo? No, esto es cerdo. ¿Ah, ya veo? Esto es pescado. ¿Ah, ya veo? ¿No hay un plato de pollo?",
+    "Question": "¿Qué va a comer la mujer?",
+    "Options": [
+        "pollo",
+        "cerdo",
+        "pescado",
+        "no hay plato de pollo"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Restaurant",
+    "created_at": "2026-03-01 21:18:48",
+    "audio_file": null
+},
+"20260301_211859": {
+    "question": {
+    "Introduction": "En un restaurante, una persona y un empleado están hablando sobre qué comer",
+    "Conversation": "Disculpe, ¿esto es pollo? No, esto es cerdo. ¿Ah, ya veo? Esto es pescado. ¿Ah, ya veo? ¿No hay un plato de pollo?",
+    "Question": "¿Qué va a comer la mujer?",
+    "Options": [
+        "pollo",
+        "cerdo",
+        "pescado",
+        "no hay plato de pollo"
+    ],
+    "Answer": 1
+    },
+    "practice_type": "Dialogue Practice",
+    "topic": "Restaurant",
+    "created_at": "2026-03-01 21:18:59",
+    "audio_file": "/Users/lycia/Coding/AI_Bootcamp/free-genai-bootcamp-2026/listening-comp/frontend/static/audio/question_20260301_211858.mp3"
+}
+}

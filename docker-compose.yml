@@ -1,0 +1,243 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+# version: "3.9"
+
+networks: # defines custom networks that containers can use to communicate
+  megaservice_network:  # name of the network that will connect all services
+    driver: bridge  # bridge network allows containers to communicate internally on the same host
+
+services: # section where all containers (services) are defined
+
+
+# --------- MEGASERVICE (API Gateway) ----------
+  megaservice: # name of the service/container inside docker compose
+    build: # tells Docker to build an image instead of pulling one from Docker Hub
+      context: ./mega-services # folder where the build process starts (current directory)
+      dockerfile: Dockerfile # which Dockerfile should be used to build the image
+    container_name: megaservice # explicit name for the running container
+    ports: # exposes container ports to your laptop
+      - "8888:8888" # host_port:container_port (access service via localhost:8888)
+    ipc: host # shares inter-process communication with host for faster communication
+    restart: always # automatically restart container if it stops or laptop reboots
+    depends_on: # ensures these services start before this container
+      - ollama-server # LLM runtime container dependency
+      - speecht5-service # text-to-speech runtime dependency
+      - gptsovits-service # voice cloning runtime dependency
+      - tts-gptsovits # additional TTS service dependency
+    networks: # specifies which network this container connects to
+      - megaservice_network # attaches container to the internal docker network
+
+
+  # ---------- OLLAMA ----------
+  ollama-server:
+    image: ollama/ollama
+    container_name: ollama-server
+    ports:
+      - ${LLM_ENDPOINT_PORT:-8008}:11434
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      LLM_MODEL_ID: ${LLM_MODEL_ID}
+      host_ip: ${host_ip}
+    networks:
+      - megaservice_network
+
+
+# ---------- SPEECHT5 ----------
+  speecht5-service:
+    image: ${REGISTRY:-opea}/speecht5:${TAG:-latest}
+    container_name: speecht5-service
+    ports:
+      - ${SPEECHT5_PORT:-7055}:7055
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7055/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+    networks:
+      - megaservice_network
+
+  # ---------- GPT-SoVITS ----------
+  gptsovits-service:
+    image: ${REGISTRY:-opea}/gpt-sovits:${TAG:-latest}
+    container_name: gpt-sovits-service
+    ports:
+      - ${GPT_SOVITS_PORT:-9880}:9880
+    ipc: host
+    volumes:
+      - ./audio:/audio
+    environment:
+      no_proxy: ${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      LLM_DOWNLOAD: "True"
+      llm_download: "True"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9880/health"]
+      interval: 10s
+      timeout: 6s
+      retries: 18
+    networks:
+      - megaservice_network
+
+  # TTS wrapper that calls GPT-SoVITS
+  tts-gptsovits:
+    image: ${REGISTRY:-opea}/tts:${TAG:-latest}
+    container_name: tts-gptsovits-service
+    ports:
+      - ${TTS_PORT:-9088}:9088
+    ipc: host
+    environment:
+      # Better: use the service name instead of hard-coded IP
+      TTS_ENDPOINT: http://gptsovits-service:9880
+      TTS_COMPONENT_NAME: ${TTS_COMPONENT_NAME:-OPEA_GPTSOVITS_TTS}
+    depends_on:
+      gptsovits-service:
+        condition: service_healthy
+    networks:
+      - megaservice_network
+
+  # ---------- OPTIONAL: TTS wrapper for SpeechT5 ----------
+  tts-speecht5:
+    image: ${REGISTRY:-opea}/tts:${TAG:-latest}
+    container_name: tts-speecht5-service
+    ports:
+      - ${TTS_PORT_SPEECHT5:-9089}:9088
+    ipc: host
+    environment:
+      TTS_ENDPOINT: http://speecht5-service:7055
+      TTS_COMPONENT_NAME: ${TTS_COMPONENT_NAME:-OPEA_SPEECHT5_TTS}
+    depends_on:
+      speecht5-service:
+        condition: service_healthy
+    networks:
+      - megaservice_network
+
+  # ---------- OPTIONAL: vLLM ----------
+  # vllm-service:
+  #   image: ${REGISTRY:-opea}/vllm:${TAG:-latest}
+  #   container_name: vllm-service
+  #   ports:
+  #     - "9009:80"
+  #   volumes:
+  #     - "./data:/data"
+  #   shm_size: 128g
+  #   environment:
+  #     no_proxy: ${no_proxy}
+  #     http_proxy: ${http_proxy}
+  #     https_proxy: ${https_proxy}
+  #     HF_TOKEN: ${HUGGINGFACEHUB_API_TOKEN}
+  #     LLM_MODEL_ID: ${LLM_MODEL_ID}
+  #     VLLM_TORCH_PROFILER_DIR: "/mnt"
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: 1
+  #             capabilities: [gpu]
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://$host_ip:9009/health || exit 1"]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 100
+  #   command: --model meta-llama/Llama-3.2-1B --host 0.0.0.0 --port 80
+  #   networks:
+  #    - megaservice_network
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ######## USEFUL DOCKER COMMANDS ########
+
+# To pull the latest images (if using pre-built images from a registry):
+# docker pull <image_name>
+# example:  docker pull opea/speecht5:latest
+
+# To see running containers:
+# docker ps
+
+# To list all containers (including stopped ones):
+# docker ps -a
+
+# To start container
+# docker start <container_name>
+# example:  docker start megaservice
+
+# To stop container
+# docker stop <container_name>
+# example:  docker stop megaservice
+
+# To restart container
+# docker restart <container_name>
+# example:  docker restart megaservice
+
+# To see logs of a container
+# docker logs <container_name>
+# example:  docker logs megaservice
+
+# To see live logs of a container
+# docker logs -f <container_name>
+# example:  docker logs -f megaservice
+
+# To enter a container (assuming it has bash installed)
+# docker exec -it <container_name> bash
+# example:  docker exec -it megaservice bash
+
+# To see docker images on your machine
+# docker images
+
+#To remove Docker containers  
+# docker rm <container_name>
+# example:  docker rm megaservice
+
+# To force remove a running container (be careful with this command)
+# docker rm -f <container_name>
+# example:  docker rm -f megaservice
+
+# To remove images 
+# docker rmi <image_name>
+# example:  docker rmi opea/tts
+
+# To check volumes
+# docker volume ls
+
+# Docker compose commands (run these in the directory where docker-compose.yml is located):
+# docker compose up
+
+# To run in detached mode (in the background):
+# docker compose up -d
+
+# To stop the services:
+# docker compose down
+
+# To restart the services:
+# docker compose restart
+
+# To see CPU+RAM usage of containers:
+# docker stats
+
+# To run the runtime container
+# docker run -d --name container-name image-name
+# example: docker run -d --name new-tts opea/tts
+
