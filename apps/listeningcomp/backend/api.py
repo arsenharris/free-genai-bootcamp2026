@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import os
 from pathlib import Path
+import asyncio
 try:
     # If running as a package (imported as apps.listening-comp.backend.api)
     from .audio_generator import AudioGenerator
@@ -24,7 +25,8 @@ app.mount("/audio", StaticFiles(directory=audio_dir), name="audio")
 async def generate_audio(request: Request):
     try:
         question = await request.json()
-        output = gen.generate_audio(question)
+        # run blocking generation in a thread so any asyncio.run inside works
+        output = await asyncio.to_thread(gen.generate_audio, question)
         # Return URL path relative to this server
         filename = Path(output).name
         return JSONResponse({"success": True, "url": f"/audio/{filename}"})

@@ -5,9 +5,6 @@ import subprocess
 from datetime import datetime
 import asyncio
 import edge_tts
-# from google.cloud import texttospeech
-# from azure.cognitiveservices.speech import SpeechConfig, SpeechSynthesizer
-# from azure.cognitiveservices.speech.audio import AudioOutputConfig
 
 class AudioGenerator:
     def __init__(self):
@@ -16,8 +13,8 @@ class AudioGenerator:
         self.model_name = "llama3.2"
         # Voice configuration (local TTS voices)
         self.voices = {
-            "male": "Jorge",
-            "female": "Monica",
+            "male": "es-ES-ElviraNeural",
+            "female": "es-ES-ElviraNeural",
             "announcer": "es-ES-ElviraNeural"
         }
         # Create audio output directory
@@ -28,13 +25,13 @@ class AudioGenerator:
         os.makedirs(self.audio_dir, exist_ok=True)
 
     def get_voice_for_gender(self, gender: str) -> str:
-        """Get an appropriate voice for the given gender"""
-        if gender == 'male':
-            return 'Jorge'
-        elif gender == 'female':
-            return 'Monica'
-        else:
-            return 'es-ES-ElviraNeural' 
+        """Get an appropriate voice id for the given gender/role.
+        Falls back to the configured female voice when unknown.
+        """
+        if not gender:
+            return self.voices.get("female")
+        key = str(gender).lower()
+        return self.voices.get(key, self.voices.get("female"))
 
     def generate_audio_part(self, text: str, voice_name: str) -> str:
         """
@@ -101,22 +98,56 @@ class AudioGenerator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_file = os.path.join(self.audio_dir, f"question_{timestamp}.mp3")
         try:
-            if 'Conversation' in question:
-                text_to_speak = question['Conversation']
-            elif 'Situation' in question:
-                text_to_speak = question['Situation']
-            else:
-                raise Exception("No conversation or situation found")
-            gender = question.get("gender", "female", "announcer").lower()
-            voice = self.get_voice_for_gender(gender)
-            audio_file = self.generate_audio_part(text_to_speak, voice)
-            # Copy to final location
-            import shutil
-            shutil.copy2(audio_file, output_file)
-            # Clean up temp file
-            if os.path.exists(audio_file):
-                os.unlink(audio_file)
-            return output_file
+            # Handle a plain string payload
+            if isinstance(question, str):
+                text_to_speak = question
+                voice = self.get_voice_for_gender(None)
+                audio_file = self.generate_audio_part(text_to_speak, voice)
+                import shutil
+                shutil.copy2(audio_file, output_file)
+                if os.path.exists(audio_file):
+                    os.unlink(audio_file)
+                return output_file
+            # Handle single-text dict payloads
+            if isinstance(question, dict) and ('Conversation' in question or 'Situation' in question or 'text' in question):
+                text_to_speak = question.get('Conversation') or question.get('Situation') or question.get('text')
+                gender = question.get('gender')
+                voice = self.get_voice_for_gender(gender)
+                audio_file = self.generate_audio_part(text_to_speak, voice)
+                import shutil
+                shutil.copy2(audio_file, output_file)
+                if os.path.exists(audio_file):
+                    os.unlink(audio_file)
+                return output_file
+            # Handle structured 'parts' payload (list of speaker parts)
+            if isinstance(question, dict) and 'parts' in question and isinstance(question['parts'], list):
+                parts = question['parts']
+                audio_files = []
+                pause_ms = int(question.get('pause_ms', 250))
+                for part in parts:
+                    if isinstance(part, dict):
+                        text = part.get('text') or part.get('Conversation') or part.get('Situation')
+                        gender = part.get('gender')
+                    else:
+                        text = str(part)
+                        gender = None
+
+                    if not text or not str(text).strip():
+                        continue
+
+                    voice = self.get_voice_for_gender(gender)
+                    part_file = self.generate_audio_part(text, voice)
+                    audio_files.append(part_file)
+                    if pause_ms > 0:
+                        audio_files.append(self.generate_silence(pause_ms))
+                if not audio_files:
+                    raise Exception("No valid parts to generate audio from")
+                success = self.combine_audio_files(audio_files, output_file)
+                if not success:
+                    raise Exception("Failed to combine audio parts")
+                return output_file
+            # Nothing matched
+            raise Exception("No conversation, situation, text, or parts found in question payload")
         except Exception as e:
             # Clean up the output file if it exists
             if os.path.exists(output_file):
