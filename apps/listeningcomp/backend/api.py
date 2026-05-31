@@ -5,14 +5,18 @@ import os
 from pathlib import Path
 import asyncio
 try:
-    # If running as a package (imported as apps.listening-comp.backend.api)
+    # If running as a package, e.g. uvicorn backend.api:app
     from .audio_generator import AudioGenerator
-except Exception:
+except ImportError:
+    if __package__:
+        raise
     # If running as a top-level module (using --app-dir or PYTHONPATH), fall back
     from audio_generator import AudioGenerator
 try:
     from .question_generator import QuestionGenerator
-except Exception:
+except ImportError:
+    if __package__:
+        raise
     from question_generator import QuestionGenerator
 
 app = FastAPI(title="Listening Comp API")
@@ -70,7 +74,61 @@ async def get_feedback(request: Request):
 @app.get("/")
 async def index():
     # Simple test UI served by API
-    html_path = Path(__file__).resolve().parents[2] / "frontend" / "index.html"
+    html_path = Path(__file__).resolve().parents[1] / "frontend" / "index.html"
     if html_path.exists():
         return HTMLResponse(html_path.read_text())
-    return HTMLResponse("<html><body><h3>No frontend found</h3></body></html>")
+    return HTMLResponse(
+        """
+        <!doctype html>
+        <html lang="en">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Listening Comp</title>
+            <style>
+                body { font-family: system-ui, sans-serif; max-width: 720px; margin: 48px auto; padding: 0 20px; line-height: 1.5; }
+                button, input, select { font: inherit; padding: 8px 10px; }
+                label { display: block; margin-top: 14px; font-weight: 600; }
+                pre { white-space: pre-wrap; background: #f5f5f5; padding: 14px; border-radius: 8px; }
+            </style>
+        </head>
+        <body>
+            <h1>Listening Comp API</h1>
+            <p>The backend is running. Generate a question to test the local API.</p>
+            <label>
+                Section
+                <select id="section">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </label>
+            <label>
+                Topic
+                <input id="topic" value="restaurant">
+            </label>
+            <p><button id="generate">Generate question</button></p>
+            <pre id="output">Ready.</pre>
+            <script>
+                const output = document.querySelector("#output");
+                document.querySelector("#generate").addEventListener("click", async () => {
+                    output.textContent = "Generating...";
+                    try {
+                        const response = await fetch("/generate_question", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                section_num: Number(document.querySelector("#section").value),
+                                topic: document.querySelector("#topic").value
+                            })
+                        });
+                        const data = await response.json();
+                        output.textContent = JSON.stringify(data, null, 2);
+                    } catch (error) {
+                        output.textContent = error.message;
+                    }
+                });
+            </script>
+        </body>
+        </html>
+        """
+    )

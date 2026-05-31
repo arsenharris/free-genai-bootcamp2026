@@ -1,8 +1,23 @@
 import json
+from pathlib import Path
 from typing import Dict, Optional
-from backend.vector_store import QuestionVectorStore
-import ollama
 import re
+
+try:
+    import ollama
+except ImportError:
+    ollama = None
+
+try:
+    from .vector_store import QuestionVectorStore
+except ImportError:
+    if __package__:
+        QuestionVectorStore = None
+    else:
+        try:
+            from vector_store import QuestionVectorStore
+        except ImportError:
+            QuestionVectorStore = None
 
 class QuestionGenerator:
     #This is the constructor for the QuestionGenerator class.
@@ -12,10 +27,10 @@ class QuestionGenerator:
     # Model ID – points to a  LLM.
     def __init__(self):
         """Initialize Ollama client and vector store"""
-        # CORRECT:
-        self.ollama_client = ollama.Client()  # Use the client directly
-        self.vector_store = QuestionVectorStore()
+        self.ollama_client = ollama.Client() if ollama else None
+        self.vector_store = QuestionVectorStore() if QuestionVectorStore else None
         self.model_id = "llama3.2:1b"
+        self.stored_questions_path = Path(__file__).resolve().parents[1] / "data" / "stored_questions.json"
 
     # Sends a prompt to  and returns the generated text.
     # Uses converse API (  LLM) with a temperature of 0.7 (creativity).
@@ -23,6 +38,9 @@ class QuestionGenerator:
     # Catches exceptions and prints them.
     def _invoke_ollama(self, prompt: str) -> Optional[str]:
         """Invoke local Ollama LLaMA model with the given prompt"""
+        if not ollama:
+            print("Ollama package is not installed; using local stored-question fallback.")
+            return None
         try:
             # Call the Ollama local model
             response = ollama.generate(          # Direct function, not Client
@@ -38,6 +56,44 @@ class QuestionGenerator:
             print(f"Error invoking Ollama: {str(e)}")
             return None
 
+    def _load_stored_questions(self, topic: str = "general") -> list[Dict]:
+        """Load locally saved questions when vector search or Ollama are unavailable."""
+        if not self.stored_questions_path.exists():
+            return []
+
+        try:
+            data = json.loads(self.stored_questions_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"Error loading stored questions: {e}")
+            return []
+
+        topic_lower = str(topic or "").lower()
+        questions = []
+        for item in data.values():
+            question = item.get("question") if isinstance(item, dict) else None
+            if not isinstance(question, dict):
+                continue
+
+            item_topic = str(item.get("topic", "")).lower()
+            if topic_lower and topic_lower != "general" and topic_lower not in item_topic:
+                continue
+
+            if isinstance(question.get("Question"), dict):
+                inner = question["Question"]
+                question["Options"] = list(inner.values())
+                question["Question"] = "¿Cuál es la respuesta correcta?"
+
+            if "Options" in question and len(question["Options"]) == 4:
+                questions.append(question)
+
+        return questions
+
+    def _fallback_question(self, topic: str = "general") -> Optional[Dict]:
+        questions = self._load_stored_questions(topic) or self._load_stored_questions("general")
+        if not questions:
+            return None
+        return questions[-1]
+
     # Generates a new listening question based on:
     # section_num ( section 2 or 3)
     # topic (e.g., "restaurant", "travel")
@@ -51,9 +107,12 @@ class QuestionGenerator:
     def generate_similar_question(self, section_num: int, topic: str) -> Dict:
         """Generate a new question similar to existing ones on a given topic"""
         # Get similar questions for context
+        if not self.vector_store:
+            return self._fallback_question(topic)
+
         similar_questions = self.vector_store.search_similar_questions(section_num, topic, n_results=3)
         if not similar_questions:
-            return None
+            return self._fallback_question(topic)
         # Create context from similar questions
         context = "Here are some example Spanish listening questions:\n\n"
         for idx, q in enumerate(similar_questions, 1):
@@ -100,7 +159,7 @@ class QuestionGenerator:
         # Generate new question
         response = self._invoke_ollama(prompt)
         if not response:
-            return None
+            return self._fallback_question(topic)
         # Parse the generated question
         try:
             match = re.search(r'\{.*\}', response, re.DOTALL)
@@ -135,7 +194,7 @@ class QuestionGenerator:
         except Exception as e:
             print(f"Error parsing question JSON: {e}")
             print("Raw model response:\n", response)
-            return None
+            return self._fallback_question(topic)
 
 
     # Generates a new  listening question based on:
