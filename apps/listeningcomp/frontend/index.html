@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Listening Practice</title>
+    <style>
+        :root {
+            --ink: #171717;
+            --paper: #fff9e8;
+            --blue: #6bb7ff;
+            --pink: #ff8fb3;
+            --yellow: #ffd84d;
+            --green: #86e3a7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--ink);
+            background:
+                linear-gradient(90deg, rgba(23, 23, 23, 0.06) 1px, transparent 1px),
+                linear-gradient(rgba(23, 23, 23, 0.06) 1px, transparent 1px),
+                var(--paper);
+            background-size: 22px 22px;
+        }
+
+        main {
+            width: min(920px, calc(100% - 32px));
+            margin: 36px auto;
+        }
+
+        h1 {
+            display: inline-block;
+            margin: 0 0 10px;
+            padding: 10px 14px;
+            background: var(--yellow);
+            border: 3px solid var(--ink);
+            box-shadow: 6px 6px 0 var(--ink);
+            font-size: clamp(2rem, 6vw, 4rem);
+            line-height: 0.95;
+        }
+
+        h2 {
+            margin: 18px 0 12px;
+            font-size: 1.35rem;
+        }
+
+        p {
+            margin: 0;
+        }
+
+        select,
+        button {
+            min-height: 44px;
+            border: 3px solid var(--ink);
+            border-radius: 0;
+            color: var(--ink);
+            font: inherit;
+            font-weight: 800;
+            box-shadow: 4px 4px 0 var(--ink);
+        }
+
+        select {
+            width: 100%;
+            padding: 9px 10px;
+            background: white;
+        }
+
+        button {
+            padding: 10px 14px;
+            background: var(--blue);
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.7;
+        }
+
+        button:active {
+            transform: translate(3px, 3px);
+            box-shadow: 1px 1px 0 var(--ink);
+        }
+
+        label {
+            display: grid;
+            gap: 8px;
+            font-weight: 900;
+        }
+
+        .subhead {
+            max-width: 620px;
+            margin-top: 14px;
+            font-weight: 700;
+        }
+
+        .panel {
+            margin-top: 28px;
+            padding: 18px;
+            background: white;
+            border: 3px solid var(--ink);
+            box-shadow: 8px 8px 0 var(--ink);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        #generate {
+            background: var(--pink);
+        }
+
+        #audio-toggle {
+            background: var(--green);
+        }
+
+        .question {
+            display: grid;
+            gap: 12px;
+        }
+
+        .script {
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            background: #f7f7f7;
+            border: 3px solid var(--ink);
+        }
+
+        .prompt {
+            padding: 12px 14px;
+            background: var(--yellow);
+            border: 3px solid var(--ink);
+            font-weight: 900;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .options button {
+            min-height: 68px;
+            text-align: left;
+            background: white;
+        }
+
+        .status {
+            margin-top: 16px;
+            min-height: 44px;
+            padding: 10px 12px;
+            background: white;
+            border: 3px solid var(--ink);
+            font-weight: 800;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 700px) {
+            main {
+                margin-top: 24px;
+            }
+
+            .controls,
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Listening Practice</h1>
+        <p class="subhead">Choose a topic, listen to the Spanish prompt, then answer without seeing the same question over and over.</p>
+
+        <section class="panel">
+            <div class="controls">
+                <label>
+                    Topic
+                    <select id="topic">
+                        <option value="restaurant">Restaurant</option>
+                        <option value="cafe">Cafe</option>
+                        <option value="airport">Airport</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="travel">Travel</option>
+                        <option value="school">School</option>
+                        <option value="directions">Directions</option>
+                    </select>
+                </label>
+                <label>
+                    Question style
+                    <select id="section">
+                        <option value="2">Dialogue comprehension</option>
+                        <option value="3">Situation question</option>
+                    </select>
+                </label>
+            </div>
+            <div class="actions">
+                <button id="generate" type="button">Generate question</button>
+                <button id="audio-toggle" type="button" disabled>Play</button>
+            </div>
+        </section>
+
+        <section id="question" class="panel question" hidden>
+            <div class="script">
+                <p id="intro"></p>
+                <p id="conversation"></p>
+            </div>
+            <p id="prompt" class="prompt"></p>
+            <div id="options" class="options"></div>
+        </section>
+
+        <p id="status" class="status">Ready.</p>
+        <audio id="audio"></audio>
+    </main>
+
+    <script>
+        const topic = document.querySelector("#topic");
+        const section = document.querySelector("#section");
+        const generateButton = document.querySelector("#generate");
+        const audioButton = document.querySelector("#audio-toggle");
+        const audio = document.querySelector("#audio");
+        const status = document.querySelector("#status");
+        const questionBlock = document.querySelector("#question");
+        const intro = document.querySelector("#intro");
+        const conversation = document.querySelector("#conversation");
+        const prompt = document.querySelector("#prompt");
+        const options = document.querySelector("#options");
+
+        let currentQuestion = null;
+        let audioUrl = null;
+        const shownQuestions = new Set();
+
+        function questionKey(question) {
+            return [
+                question.Introduction || "",
+                question.Situation || "",
+                question.Conversation || "",
+                question.Question || "",
+                ...(question.Options || [])
+            ].join("|").toLowerCase();
+        }
+
+        function setAudioState(state) {
+            if (state === "loading") {
+                audioButton.textContent = "Loading audio";
+                audioButton.disabled = true;
+                return;
+            }
+
+            audioButton.disabled = !currentQuestion;
+            audioButton.textContent = audio.paused ? "Play" : "Pause";
+        }
+
+        function resetAudio() {
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
+            audioUrl = null;
+            setAudioState("ready");
+        }
+
+        function renderQuestion(question) {
+            currentQuestion = question;
+            resetAudio();
+            intro.textContent = question.Introduction || question.Situation || "";
+            conversation.textContent = question.Conversation || "";
+            conversation.hidden = !conversation.textContent;
+            prompt.textContent = question.Question || "";
+            options.innerHTML = "";
+
+            (question.Options || []).forEach((option, index) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = `${index + 1}. ${option}`;
+                button.addEventListener("click", () => checkAnswer(index + 1));
+                options.appendChild(button);
+            });
+
+            questionBlock.hidden = false;
+            status.textContent = "Question ready.";
+            setAudioState("ready");
+        }
+
+        async function generateQuestion() {
+            generateButton.disabled = true;
+            status.textContent = "Generating question...";
+            questionBlock.hidden = true;
+            resetAudio();
+
+            try {
+                let data = null;
+                for (let attempt = 0; attempt < 4; attempt += 1) {
+                    const response = await fetch("/generate_question", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            section_num: Number(section.value),
+                            topic: topic.value
+                        })
+                    });
+                    data = await response.json();
+                    if (!data.success) break;
+
+                    const key = questionKey(data.question);
+                    if (!shownQuestions.has(key) || shownQuestions.size > 20) {
+                        shownQuestions.add(key);
+                        renderQuestion(data.question);
+                        return;
+                    }
+                }
+
+                status.textContent = data?.error || "No new question available yet. Try a different topic.";
+            } catch (error) {
+                status.textContent = error.message;
+            } finally {
+                generateButton.disabled = false;
+            }
+        }
+
+        async function toggleAudio() {
+            if (!currentQuestion) return;
+
+            if (audioUrl && !audio.paused) {
+                audio.pause();
+                setAudioState("ready");
+                return;
+            }
+
+            try {
+                if (!audioUrl) {
+                    setAudioState("loading");
+                    status.textContent = "Generating audio...";
+                    const response = await fetch("/generate_audio", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(currentQuestion)
+                    });
+                    const data = await response.json();
+                    if (!data.success) {
+                        status.textContent = data.detail || data.error || "Audio generation failed.";
+                        setAudioState("ready");
+                        return;
+                    }
+                    audioUrl = data.url;
+                    audio.src = audioUrl;
+                }
+
+                await audio.play();
+                status.textContent = "Playing audio.";
+                setAudioState("ready");
+            } catch (error) {
+                status.textContent = error.message;
+                setAudioState("ready");
+            }
+        }
+
+        async function checkAnswer(selectedAnswer) {
+            if (!currentQuestion) return;
+            status.textContent = "Checking answer...";
+            try {
+                const response = await fetch("/get_feedback", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        question: currentQuestion,
+                        selected_answer: selectedAnswer
+                    })
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    status.textContent = data.error || "Feedback generation failed.";
+                    return;
+                }
+                status.textContent = data.feedback.explanation;
+            } catch (error) {
+                status.textContent = error.message;
+            }
+        }
+
+        audio.addEventListener("pause", () => setAudioState("ready"));
+        audio.addEventListener("play", () => setAudioState("ready"));
+        audio.addEventListener("ended", () => {
+            audio.currentTime = 0;
+            setAudioState("ready");
+        });
+        generateButton.addEventListener("click", generateQuestion);
+        audioButton.addEventListener("click", toggleAudio);
+    </script>
+</body>
+</html>

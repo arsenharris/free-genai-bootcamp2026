@@ -86,32 +86,104 @@ async def index():
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>Listening Comp</title>
             <style>
-                body { font-family: system-ui, sans-serif; max-width: 720px; margin: 48px auto; padding: 0 20px; line-height: 1.5; }
-                button, input, select { font: inherit; padding: 8px 10px; }
-                label { display: block; margin-top: 14px; font-weight: 600; }
-                pre { white-space: pre-wrap; background: #f5f5f5; padding: 14px; border-radius: 8px; }
+                body { font-family: system-ui, sans-serif; max-width: 780px; margin: 42px auto; padding: 0 20px; line-height: 1.5; color: #202124; }
+                h1 { margin-bottom: 8px; }
+                .controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 24px 0 18px; }
+                button, select { font: inherit; padding: 10px 12px; border: 1px solid #b8bcc2; border-radius: 6px; background: white; }
+                button { cursor: pointer; background: #1f6feb; color: white; border-color: #1f6feb; }
+                label { display: grid; gap: 6px; font-weight: 650; }
+                .hint { color: #5f6368; font-size: 0.94rem; margin: 0; }
+                .question { margin-top: 22px; padding-top: 18px; border-top: 1px solid #dfe3e8; }
+                .options { display: grid; gap: 8px; margin-top: 12px; }
+                .options button { text-align: left; background: #fff; color: #202124; border-color: #c8ccd2; }
+                pre { white-space: pre-wrap; background: #f5f7f9; padding: 14px; border-radius: 8px; overflow-wrap: anywhere; }
+                @media (max-width: 640px) { .controls { grid-template-columns: 1fr; } }
             </style>
         </head>
         <body>
-            <h1>Listening Comp API</h1>
-            <p>The backend is running. Generate a question to test the local API.</p>
-            <label>
-                Section
-                <select id="section">
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                </select>
-            </label>
-            <label>
-                Topic
-                <input id="topic" value="restaurant">
-            </label>
+            <h1>Listening Practice</h1>
+            <p class="hint">Pick a topic and question style, then generate a Spanish listening question.</p>
+            <div class="controls">
+                <label>
+                    Topic
+                    <select id="topic">
+                        <option value="restaurant">Restaurant</option>
+                        <option value="cafe">Cafe</option>
+                        <option value="airport">Airport</option>
+                        <option value="hotel">Hotel</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="travel">Travel</option>
+                        <option value="school">School</option>
+                        <option value="directions">Directions</option>
+                    </select>
+                </label>
+                <label>
+                    Question style
+                    <select id="section">
+                        <option value="2">Dialogue comprehension</option>
+                        <option value="3">Situation question</option>
+                    </select>
+                </label>
+            </div>
+            <p class="hint">
+                Dialogue comprehension uses an introduction plus conversation. Situation question is a shorter prompt.
+            </p>
             <p><button id="generate">Generate question</button></p>
+            <section id="question" class="question" hidden>
+                <p id="intro"></p>
+                <p id="conversation"></p>
+                <h2 id="prompt"></h2>
+                <div id="options" class="options"></div>
+            </section>
             <pre id="output">Ready.</pre>
             <script>
                 const output = document.querySelector("#output");
+                const questionBlock = document.querySelector("#question");
+                const intro = document.querySelector("#intro");
+                const conversation = document.querySelector("#conversation");
+                const prompt = document.querySelector("#prompt");
+                const options = document.querySelector("#options");
+                let currentQuestion = null;
+
+                function renderQuestion(question) {
+                    currentQuestion = question;
+                    intro.textContent = question.Introduction || question.Situation || "";
+                    conversation.textContent = question.Conversation || "";
+                    prompt.textContent = question.Question || "";
+                    options.innerHTML = "";
+                    (question.Options || []).forEach((option, index) => {
+                        const button = document.createElement("button");
+                        button.type = "button";
+                        button.textContent = `${index + 1}. ${option}`;
+                        button.addEventListener("click", () => checkAnswer(index + 1));
+                        options.appendChild(button);
+                    });
+                    questionBlock.hidden = false;
+                    output.textContent = JSON.stringify(question, null, 2);
+                }
+
+                async function checkAnswer(selectedAnswer) {
+                    if (!currentQuestion) return;
+                    output.textContent = "Checking answer...";
+                    try {
+                        const response = await fetch("/get_feedback", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                question: currentQuestion,
+                                selected_answer: selectedAnswer
+                            })
+                        });
+                        const data = await response.json();
+                        output.textContent = JSON.stringify(data, null, 2);
+                    } catch (error) {
+                        output.textContent = error.message;
+                    }
+                }
+
                 document.querySelector("#generate").addEventListener("click", async () => {
                     output.textContent = "Generating...";
+                    questionBlock.hidden = true;
                     try {
                         const response = await fetch("/generate_question", {
                             method: "POST",
@@ -122,7 +194,11 @@ async def index():
                             })
                         });
                         const data = await response.json();
-                        output.textContent = JSON.stringify(data, null, 2);
+                        if (!data.success) {
+                            output.textContent = data.error || "Question generation failed";
+                            return;
+                        }
+                        renderQuestion(data.question);
                     } catch (error) {
                         output.textContent = error.message;
                     }

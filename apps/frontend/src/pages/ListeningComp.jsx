@@ -1,38 +1,108 @@
 import React, {useState, useRef} from 'react'
 
+const TOPICS = [
+  { value: 'restaurant', label: 'Restaurant' },
+  { value: 'cafe', label: 'Cafe' },
+  { value: 'airport', label: 'Airport' },
+  { value: 'hotel', label: 'Hotel' },
+  { value: 'shopping', label: 'Shopping' },
+  { value: 'travel', label: 'Travel' },
+  { value: 'school', label: 'School' },
+  { value: 'directions', label: 'Directions' },
+]
+
+function questionKey(question){
+  if(!question) return ''
+  return [
+    question.Introduction || '',
+    question.Situation || '',
+    question.Conversation || '',
+    question.Question || '',
+    ...(question.Options || []),
+  ].join('|').toLowerCase()
+}
+
 export default function ListeningComp(){
-  const [topic, setTopic] = useState('restaurante')
+  const [topic, setTopic] = useState('restaurant')
   const [section, setSection] = useState(2)
   const [question, setQuestion] = useState(null)
   const [audioUrl, setAudioUrl] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [audioLoading, setAudioLoading] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
   const [feedback, setFeedback] = useState(null)
   const [tab, setTab] = useState('listening')
   const [writingText, setWritingText] = useState('')
+  const audioRef = useRef(null)
   const mediaRecorderRef = useRef(null)
+  const seenQuestionsRef = useRef(new Set())
   const [recording, setRecording] = useState(false)
   const [recordedUrl, setRecordedUrl] = useState(null)
 
   async function generateQuestion(){
     setLoading(true)
     try{
-      const res = await fetch('/generate_question', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({section_num: section, topic})})
-      const j = await res.json()
-      if(j.success){ setQuestion(j.question); setFeedback(null); setAudioUrl(null) }
-      else alert(JSON.stringify(j))
+      let lastResponse = null
+      for(let attempt = 0; attempt < 4; attempt += 1){
+        const res = await fetch('/generate_question', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({section_num: section, topic})})
+        const j = await res.json()
+        lastResponse = j
+        if(!j.success) break
+
+        const key = questionKey(j.question)
+        if(!seenQuestionsRef.current.has(key) || seenQuestionsRef.current.size > 20){
+          seenQuestionsRef.current.add(key)
+          setQuestion(j.question)
+          setFeedback(null)
+          setAudioUrl(null)
+          setIsPlaying(false)
+          if(audioRef.current){
+            audioRef.current.pause()
+            audioRef.current.removeAttribute('src')
+            audioRef.current.load()
+          }
+          setLoading(false)
+          return
+        }
+      }
+      alert(lastResponse?.error || 'No new question available yet. Try another topic.')
     }catch(err){ alert(err.message) }
     setLoading(false)
   }
 
-  async function playConversation(){
+  async function toggleConversation(){
     if(!question) return alert('Generate a question first')
-    setLoading(true)
+    if(audioRef.current && audioUrl && isPlaying){
+      audioRef.current.pause()
+      setIsPlaying(false)
+      return
+    }
+
+    setAudioLoading(true)
     try{
-      const res = await fetch('/generate_audio', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(question)})
-      const j = await res.json()
-      if(j.success){ setAudioUrl(j.url) } else { alert(JSON.stringify(j)) }
+      let nextAudioUrl = audioUrl
+      if(!nextAudioUrl){
+        const res = await fetch('/generate_audio', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(question)})
+        const j = await res.json()
+        if(j.success){
+          nextAudioUrl = j.url
+          setAudioUrl(j.url)
+        } else {
+          alert(JSON.stringify(j))
+          setAudioLoading(false)
+          return
+        }
+      }
+
+      if(audioRef.current){
+        if(audioRef.current.src !== new URL(nextAudioUrl, window.location.href).href){
+          audioRef.current.src = nextAudioUrl
+        }
+        await audioRef.current.play()
+        setIsPlaying(true)
+      }
     }catch(err){ alert(err.message) }
-    setLoading(false)
+    setAudioLoading(false)
   }
 
   async function submitAnswer(i){
@@ -79,8 +149,13 @@ export default function ListeningComp(){
       </div>
 
       <div className="controls">
-        <label>Topic: <input value={topic} onChange={e=>setTopic(e.target.value)} /></label>
-        <label>Section: <select value={section} onChange={e=>setSection(Number(e.target.value))}><option value={2}>2</option><option value={3}>3</option></select></label>
+        <label>Topic: <select value={topic} onChange={e=>setTopic(e.target.value)}>
+          {TOPICS.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+        </select></label>
+        <label>Question style: <select value={section} onChange={e=>setSection(Number(e.target.value))}>
+          <option value={2}>Dialogue comprehension</option>
+          <option value={3}>Situation question</option>
+        </select></label>
         <button className="btn primary big-btn" onClick={generateQuestion} disabled={loading}>{loading? <span className="loading">GENERATING…</span> : 'GENERATE LESSON'}</button>
       </div>
 
@@ -91,8 +166,16 @@ export default function ListeningComp(){
           {question.Conversation && <div className="card" style={{marginTop:8}}><strong>Conversation:</strong> {question.Conversation}</div>}
 
           <div style={{display:'flex',alignItems:'center',gap:12,marginTop:12}}>
-            <div className="play-btn btn primary alt" onClick={playConversation} role="button">▶️ PLAY</div>
-            {audioUrl && <div className="audio-box"><audio controls src={audioUrl} /></div>}
+            <button className="play-btn btn primary alt" onClick={toggleConversation} disabled={audioLoading}>
+              {audioLoading ? 'LOADING' : isPlaying ? 'PAUSE' : 'PLAY'}
+            </button>
+            <audio
+              ref={audioRef}
+              src={audioUrl || undefined}
+              onPlay={()=>setIsPlaying(true)}
+              onPause={()=>setIsPlaying(false)}
+              onEnded={()=>setIsPlaying(false)}
+            />
             <div style={{marginLeft:'auto'}}>
               <button className="btn" onClick={()=>{ /* placeholder for transcript toggle */ }} >SHOW TRANSCRIPT</button>
             </div>
@@ -149,8 +232,7 @@ export default function ListeningComp(){
           <h3>Listening & Speaking</h3>
           <p>Play the conversation, then record yourself answering or repeating.</p>
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
-            <button className="btn" onClick={playConversation} disabled={loading}>Play Conversation</button>
-            {audioUrl && <div className="audio-box"><audio controls src={audioUrl} /></div>}
+            <button className="btn" onClick={toggleConversation} disabled={audioLoading}>{isPlaying ? 'Pause Conversation' : 'Play Conversation'}</button>
           </div>
           <div style={{marginTop:12}}>
             {!recording && <button className="btn" onClick={startRecording}>Start Recording</button>}

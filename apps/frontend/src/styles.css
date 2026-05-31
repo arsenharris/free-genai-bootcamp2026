@@ -78,7 +78,17 @@ body{
 /* Misc */
 h1,h2,h3{margin:0 0 8px 0}
 .controls{display:flex;gap:8px;align-items:center;margin:12px 0}
+.controls label,
+.writing-grid label{display:flex;flex-direction:column;gap:6px;font-weight:900}
+select{border:3px solid var(--border);background:var(--bg);padding:10px 12px;font:inherit;font-weight:800;color:var(--text)}
 .muted{opacity:0.6}
+.category-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.writing-grid{display:grid;grid-template-columns:minmax(220px, 0.85fr) minmax(280px, 1.15fr);gap:16px}
+.spec-stack{display:flex;flex-direction:column;gap:12px}
+.spec-stack h3,.spec-stack h4{margin:0 0 8px 0}
+.spec-stack p{margin:8px 0}
+.tag-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+code{font-weight:900;background:var(--off-bg);padding:2px 4px;border:2px solid var(--border)}
 
 /* Make links look like buttons in sidebar */
 .link-as-tile{text-decoration:none}
@@ -88,4 +98,6 @@ h1,h2,h3{margin:0 0 8px 0}
 	.layout{flex-direction:column}
 	.sidebar{width:100%;flex-direction:row;overflow:auto}
 	.tile-btn{flex:1;justify-content:center}
+	.controls{flex-direction:column;align-items:stretch}
+	.writing-grid{grid-template-columns:1fr}
 }
