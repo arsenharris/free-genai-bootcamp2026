@@ -7,7 +7,9 @@ server: {
     port: 5173,
     proxy: {
     '/generate_audio': 'http://localhost:8000',
-    '/audio': 'http://localhost:8000'
+    '/audio': 'http://localhost:8000',
+    '/generate_question': 'http://localhost:8000',
+    '/get_feedback': 'http://localhost:8000'
     }
 }
 })
