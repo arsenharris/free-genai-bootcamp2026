@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 from pathlib import Path
 import asyncio
+import json
 try:
     # If running as a package, e.g. uvicorn backend.api:app
     from .audio_generator import AudioGenerator
@@ -30,6 +31,19 @@ qgen = QuestionGenerator()
 audio_dir = gen.audio_dir
 os.makedirs(audio_dir, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=audio_dir), name="audio")
+
+workspace_root = Path(__file__).resolve().parents[3]
+visual_novel_public_dir = workspace_root / "apps" / "visual-novel" / "public"
+visual_novel_scenes_dir = visual_novel_public_dir / "data" / "scenes"
+visual_novel_mappings_path = visual_novel_public_dir / "data" / "mappings.json"
+visual_novel_story_dir = workspace_root / "apps" / "visual-novel" / "story"
+
+if visual_novel_public_dir.exists():
+    app.mount(
+        "/visual-novel-assets",
+        StaticFiles(directory=visual_novel_public_dir),
+        name="visual-novel-assets",
+    )
 
 @app.post("/generate_audio")
 async def generate_audio(request: Request):
@@ -68,6 +82,44 @@ async def get_feedback(request: Request):
         if not feedback:
             return JSONResponse({"success": False, "error": "Feedback generation failed"}, status_code=500)
         return JSONResponse({"success": True, "feedback": feedback})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/visual-novel/scenes/{scene_id}")
+async def get_visual_novel_scene(scene_id: str):
+    scene_path = visual_novel_scenes_dir / f"{scene_id}.json"
+    if not scene_path.exists():
+        raise HTTPException(status_code=404, detail=f"Scene '{scene_id}' not found")
+
+    try:
+        scene = json.loads(scene_path.read_text(encoding="utf-8"))
+        story_path = visual_novel_story_dir / f"{scene_id}.json"
+        if story_path.exists():
+            story_scene = json.loads(story_path.read_text(encoding="utf-8"))
+            if "languageLearning" in story_scene:
+                scene["languageLearning"] = story_scene["languageLearning"]
+            if "nextScene" in story_scene:
+                scene["nextScene"] = story_scene["nextScene"]
+
+        return JSONResponse({
+            "success": True,
+            "scene": scene,
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/visual-novel/mappings")
+async def get_visual_novel_mappings():
+    if not visual_novel_mappings_path.exists():
+        return JSONResponse({"success": True, "mappings": {"characterNames": {}}})
+
+    try:
+        return JSONResponse({
+            "success": True,
+            "mappings": json.loads(visual_novel_mappings_path.read_text(encoding="utf-8")),
+        })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

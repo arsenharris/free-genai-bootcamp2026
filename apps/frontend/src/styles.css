@@ -66,6 +66,17 @@ body{
 
 /* Writing area */
 .writing-area{width:100%;min-height:180px;border:3px solid var(--border);padding:12px;font-family:inherit}
+.writing-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-weight:900}
+.writing-stats span{padding:6px 8px;border:3px solid var(--border);background:var(--off-bg);font-size:13px}
+.writing-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.starter-list{display:grid;gap:8px;margin-top:10px}
+.starter-chip{width:100%;text-align:left;border:3px solid var(--border);background:var(--off-bg);padding:8px 10px;font:inherit;font-weight:900;cursor:pointer}
+.starter-chip:hover{transform:translateY(-2px)}
+.writing-result{padding:12px;border:3px solid var(--border);background:var(--off-bg)}
+.writing-result-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.writing-result ul{margin:10px 0 0 18px;padding:0}
+.writing-result li{margin:6px 0}
+.writing-result p{margin:10px 0;line-height:1.55}
 
 /* Small stickers / badges */
 .badge{display:inline-block;padding:6px 8px;border:3px solid var(--border);background:var(--bg);font-weight:900}
@@ -81,6 +92,7 @@ h1,h2,h3{margin:0 0 8px 0}
 .controls label,
 .writing-grid label{display:flex;flex-direction:column;gap:6px;font-weight:900}
 select{border:3px solid var(--border);background:var(--bg);padding:10px 12px;font:inherit;font-weight:800;color:var(--text)}
+input{border:3px solid var(--border);background:var(--bg);padding:10px 12px;font:inherit;font-weight:800;color:var(--text)}
 .muted{opacity:0.6}
 .category-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .writing-grid{display:grid;grid-template-columns:minmax(220px, 0.85fr) minmax(280px, 1.15fr);gap:16px}
@@ -90,8 +102,49 @@ select{border:3px solid var(--border);background:var(--bg);padding:10px 12px;fon
 .tag-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 code{font-weight:900;background:var(--off-bg);padding:2px 4px;border:2px solid var(--border)}
 
+/* Song vocab */
+.song-search{display:grid;grid-template-columns:minmax(280px,1fr) auto;gap:12px;align-items:end}
+.song-search label{display:flex;flex-direction:column;gap:6px;font-weight:900}
+.example-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.song-error{border-color:var(--accent-danger)}
+.song-error p{margin:8px 0 0}
+.song-results{margin-top:16px}
+.song-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.song-summary p{margin:8px 0 0;font-weight:800;overflow-wrap:anywhere}
+.song-layout{display:grid;grid-template-columns:minmax(280px,0.9fr) minmax(320px,1.1fr);gap:12px;margin-top:12px;align-items:start}
+.lyrics-text{margin:8px 0 0;white-space:pre-wrap;font:inherit;line-height:1.55;max-height:520px;overflow:auto}
+.vocab-list{display:grid;gap:10px}
+.vocab-list h3{margin:0}
+.vocab-card{display:grid;gap:8px}
+.vocab-card p{margin:0;line-height:1.45}
+.vocab-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* Visual novel */
+.vn-stage{position:relative;min-height:520px;margin-top:12px;border:3px solid var(--border);background-size:cover;background-position:center;overflow:hidden}
+.vn-stage::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(0,0,0,0.18));pointer-events:none}
+.vn-character{position:absolute;right:6%;bottom:104px;max-height:380px;max-width:38%;object-fit:contain;filter:drop-shadow(8px 8px 0 rgba(0,0,0,0.55));z-index:1}
+.vn-dialog{position:absolute;left:18px;right:18px;bottom:18px;z-index:2;padding:16px;border:3px solid var(--border);background:rgba(255,255,255,0.94)}
+.vn-speaker{display:inline-block;margin-bottom:8px;padding:6px 10px;border:3px solid var(--border);background:var(--primary);font-weight:900}
+.vn-spanish{margin:0;font-size:22px;font-weight:900;line-height:1.35}
+.vn-english{margin:8px 0 0 0;font-size:15px;font-weight:700;opacity:0.74}
+.vn-response{margin-top:10px;padding:10px;border:3px solid var(--border);background:var(--off-bg);font-weight:800}
+.vn-choices{display:grid;gap:10px}
+.vn-choices .tile-btn{display:flex;flex-direction:column;align-items:flex-start}
+.vn-learning{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.vn-learning-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.vn-history{display:grid;gap:8px;margin-top:12px}
+
 /* Make links look like buttons in sidebar */
 .link-as-tile{text-decoration:none}
+
+/* Flashcard grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{cursor:pointer;padding:0;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;height:220px}
+.card-front,.card-back{padding:12px;flex:1;display:flex;flex-direction:column;gap:8px}
+.card-title{font-weight:900;font-size:18px}
+.card-meta{font-size:13px;color:#555}
+.card-back{background:var(--off-bg)}
+
 
 /* Responsive small screens */
 @media (max-width:800px){
@@ -100,4 +153,9 @@ code{font-weight:900;background:var(--off-bg);padding:2px 4px;border:2px solid v
 	.tile-btn{flex:1;justify-content:center}
 	.controls{flex-direction:column;align-items:stretch}
 	.writing-grid{grid-template-columns:1fr}
+	.song-search,.example-row,.song-summary,.song-layout{grid-template-columns:1fr}
+	.vn-stage{min-height:460px}
+	.vn-character{right:50%;transform:translateX(50%);max-width:70%;max-height:280px}
+	.vn-spanish{font-size:18px}
+	.vn-learning,.vn-learning-grid{grid-template-columns:1fr}
 }

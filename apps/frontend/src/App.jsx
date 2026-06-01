@@ -3,7 +3,17 @@ import { Routes, Route, Link } from 'react-router-dom'
 import ListeningComp from './pages/ListeningComp'
 import VisualNovel from './pages/VisualNovel'
 import WritingPractice from './pages/WritingPractice'
+import SongVocab from './pages/SongVocab'
+import FlashcardNeo from './pages/FlashcardNeo'
 import './styles.css'
+
+function EmptyCategory({title}){
+    return (
+        <div>
+            <h2>{title}</h2>
+        </div>
+    )
+}
 
 export default function App(){
     return (
@@ -29,6 +39,12 @@ export default function App(){
                     <Link to="/writing" className="link-as-tile">
                         <div className="tile-btn"><span className="emoji">✍️</span><span>Writing</span></div>
                     </Link>
+                    <Link to="/song-vocab" className="link-as-tile">
+                        <div className="tile-btn"><span className="emoji">🎵</span><span>Song Vocab</span></div>
+                    </Link>
+                    <Link to="/flashcard-neo" className="link-as-tile">
+                        <div className="tile-btn"><span className="emoji">🃏</span><span>Flashcard Neo</span></div>
+                    </Link>
                 </div>
 
                 <div className="main">
@@ -36,6 +52,8 @@ export default function App(){
                         <Route path="/" element={<ListeningComp/>} />
                         <Route path="/visual" element={<VisualNovel/>} />
                         <Route path="/writing" element={<WritingPractice/>} />
+                        <Route path="/song-vocab" element={<SongVocab/>} />
+                        <Route path="/flashcard-neo" element={<FlashcardNeo />} />
                     </Routes>
                 </div>
             </div>

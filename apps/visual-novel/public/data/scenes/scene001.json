@@ -1,0 +1,95 @@
+{
+    "id": "scene001",
+    "title": "Bienvenido a España",
+    "location_id": "apartamento",
+    "character_id": "alex",
+    "startsAt": "000",
+    "dialog": {
+        "x00": {
+            "speakerId": "player",
+            "japanese": "...",
+            "default_next_id": "000"
+        },
+        "000": {
+            "speakerId": "player",
+            "audio": "wake-up",
+            "appear": "alex",
+            "japanese": "Te despiertas en tu nuevo apartamento en España. La luz de la mañana entra por las persianas mientras escuchas a alguien en la cocina.",
+            "words": [
+                {"word": "Te","start": 0.0,"end": 0.3},
+                {"word": "despiertas","start": 0.3,"end": 1.0},
+                {"word": "en","start": 1.0,"end": 1.2},
+                {"word": "tu","start": 1.2,"end": 1.4},
+                {"word": "nuevo","start": 1.4,"end": 1.8},
+                {"word": "apartamento","start": 1.8,"end": 2.4},
+                {"word": "en","start": 2.4,"end": 2.6},
+                {"word": "España.","start": 2.6,"end": 3.1}
+            ],
+            "english": "You wake up in your new apartment in Spain. The morning sunlight streams through the blinds as you hear someone in the kitchen.",
+            "default_next_id": "001"
+        },
+        "001": {
+            "speakerId": "alex",
+            "japanese": "¡Buenos días! ¿Ya estás despierto?",
+            "english": "Oh, you're up! Good morning!",
+            "choices": [
+                {
+                    "english": "Good morning. You must be Alex?",
+                    "japanese": "Buenos días. ¿Eres Alex?",
+                    "next_id": "002"
+                },
+                {
+                    "english": "Hello. Nice to meet you.",
+                    "japanese": "Hola. Mucho gusto.",
+                    "next_id": "002"
+                }
+            ]
+        },
+        "002": {
+            "speakerId": "alex",
+            "japanese": "¡Así es! Bienvenido a España. Soy Alex Thompson, seré tu compañero de piso por un mes. Soy de Canadá, pero llevo tiempo viviendo aquí.",
+            "english": "That's right! Welcome to Spain! I'm Alex Thompson, your roommate for the month. I'm from Canada, but I've been living here for some time.",
+            "choices": [
+                {
+                    "english": "Thanks for having me. I'm excited to be here.",
+                    "japanese": "Gracias por recibirme. Estoy emocionado de estar aquí.",
+                    "next_id": "003"
+                },
+                {
+                    "english": "Your Spanish must be pretty good after living here for so long.",
+                    "japanese": "Tu español debe estar muy bien después de tanto tiempo aquí.",
+                    "next_id": "003"
+                }
+            ]
+        },
+        "003": {
+            "speakerId": "alex",
+            "japanese": "He preparado café. ¿Quieres antes de salir? La orientación de la escuela de idiomas empieza a las 10:00.",
+            "english": "I made some coffee. Would you like some before we head out? Your language school orientation starts at 10:00.",
+            "choices": [
+                {
+                    "english": "Coffee sounds great, thanks!",
+                    "japanese": "¡El café suena genial, gracias!",
+                    "next_id": "004"
+                },
+                {
+                    "english": "What time is it now?",
+                    "japanese": "¿Qué hora es ahora?",
+                    "next_id": "004"
+                }
+            ]
+        },
+        "004": {
+            "speakerId": "alex",
+            "japanese": "Son aproximadamente las 8:30. La escuela está a 15 minutos a pie desde aquí. Hoy te enseñaré el camino.",
+            "english": "It's about 8:30 now. The school is a 15-minute walk from here. I'll show you the way today.",
+            "default_next_id": "005"
+        },
+        "005": {
+            "speakerId": "player",
+            "japanese": "Alex te entrega amablemente el café. Después de hablar un poco con él, empiezas a prepararte para ir a la escuela.",
+            "english": "Alex hands you the coffee. After chatting with him a bit more, you start getting ready for school.",
+            "ends": true
+        }
+    }
+}

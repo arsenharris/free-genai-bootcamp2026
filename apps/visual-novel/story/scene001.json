@@ -1,0 +1,195 @@
+{
+  "id": "scene001",
+  "title": "Welcome to Spain",
+  "description": "First day in Spain, meeting your roommate Alex",
+  "location": {
+    "id": "apartment",
+    "name": "Shared Apartment",
+    "backgroundImage": "apartment-interior.jpg"
+  },
+  "character": {
+    "id": "alex",
+    "name": "Alex Thompson",
+    "defaultImage": "alex-neutral.png"
+  },
+  "languageDifficulty": "beginner",
+  "dialog": [
+    {
+      "speaker": "narrator",
+      "text": "You wake up in your new apartment in Spain. The morning sunlight streams through the blinds as you hear someone in the kitchen.",
+      "spanish": null
+    },
+    {
+      "speaker": "alex",
+      "text": "Oh, you're up! Good morning!",
+      "spanish": "¡Buenos días! ¿Te has levantado?",
+      "characterImage": "alex-happy.png",
+      "audioFile": "alex-greeting.mp3"
+    },
+    {
+      "speaker": "player",
+      "text": "Good morning. You must be Alex?",
+      "options": [
+        {
+          "text": "Good morning. You must be Alex?",
+          "spanish": "Buenos días. ¿Eres Alex?",
+          "languageLevel": "beginner"
+        },
+        {
+          "text": "Hello. Nice to meet you.",
+          "spanish": "Hola. Mucho gusto.",
+          "languageLevel": "beginner"
+        }
+      ]
+    },
+    {
+      "speaker": "alex",
+      "text": "That's right! Welcome to Spain! I'm Alex Thompson, your roommate for the month. I'm from Canada, but I've been living here for a couple of years.",
+      "spanish": "¡Así es! Bienvenido a España. Soy Alex Thompson, tu compañero de piso por este mes. Soy de Canadá, pero llevo un par de años viviendo aquí.",
+      "characterImage": "alex-neutral.png",
+      "audioFile": "alex-introduction.mp3"
+    },
+    {
+      "speaker": "player",
+      "text": "Thanks for having me. I'm excited to be here.",
+      "options": [
+        {
+          "text": "Thanks for having me. I'm excited to be here.",
+          "spanish": "Gracias por recibirme. Estoy emocionado de estar aquí.",
+          "languageLevel": "beginner"
+        }
+      ]
+    },
+    {
+      "speaker": "alex",
+      "text": "I made some coffee. Would you like some before we head out? Your language school orientation starts at 10:00.",
+      "spanish": "He hecho café. ¿Quieres antes de que salgamos? La orientación de tu escuela de idiomas empieza a las 10:00.",
+      "characterImage": "alex-coffee.png",
+      "audioFile": "alex-coffee.mp3"
+    },
+    {
+      "speaker": "player",
+      "text": "Coffee sounds great, thanks!",
+      "options": [
+        {
+          "text": "Coffee sounds great, thanks!",
+          "spanish": "¡El café suena genial, gracias!",
+          "languageLevel": "beginner"
+        },
+        {
+          "text": "What time is it now?",
+          "spanish": "¿Qué hora es ahora?",
+          "languageLevel": "beginner"
+        }
+      ]
+    },
+    {
+      "speaker": "alex",
+      "text": "It's about 8:30 now. The school is a 15-minute walk from here. I'll show you the way today.",
+      "spanish": "Son las 8:30 aproximadamente. La escuela está a 15 minutos a pie desde aquí. Te mostraré el camino hoy.",
+      "characterImage": "alex-pointing.png",
+      "audioFile": "alex-time.mp3"
+    }
+  ],
+  "languageLearning": {
+    "vocabulary": [
+      {
+        "word": "buenos días",
+        "translation": "Good morning (casual)",
+        "usage": "Morning greeting with friends",
+        "example": "¡Buenos días! ¿Cómo estás? (Good morning! How are you?)"
+      },
+      {
+        "word": "mucho gusto",
+        "translation": "Nice to meet you",
+        "usage": "First-time introductions",
+        "example": "Mucho gusto, soy María. (Nice to meet you, I'm María.)"
+      },
+      {
+        "word": "gracias",
+        "translation": "Thank you",
+        "usage": "Expressing gratitude",
+        "example": "Gracias por el café. (Thanks for the coffee.)"
+      },
+      {
+        "word": "¿qué hora es?",
+        "translation": "What time is it?",
+        "usage": "Asking for the time",
+        "example": "¿Qué hora es ahora? (What time is it now?)"
+      }
+    ],
+    "grammar": [
+      {
+        "pattern": "Present simple and polite requests",
+        "explanation": "Basic present-tense forms and simple polite structures useful for beginners",
+        "examples": [
+          {
+            "spanish": "Soy estudiante.",
+            "translation": "I am a student."
+          },
+          {
+            "spanish": "Estudio todos los días.",
+            "translation": "I study every day."
+          }
+        ]
+      },
+      {
+        "pattern": "Prepositions of place and origin",
+        "explanation": "Phrases to indicate origin or distance",
+        "examples": [
+          {
+            "spanish": "Vengo de Canadá.",
+            "translation": "I come from Canada."
+          },
+          {
+            "spanish": "La escuela está a 15 minutos caminando desde aquí.",
+            "translation": "The school is a 15-minute walk from here."
+          }
+        ]
+      }
+    ],
+    "culturalNotes": [
+      {
+        "title": "Greetings and formality",
+        "content": "In Spanish, greetings and formality vary by region. 'Buenos días' is used in the morning, 'Buenas tardes' in the afternoon, and you can use 'usted' vs 'tú' depending on formality. Encourage learners to notice register and context."
+      },
+      {
+        "title": "Coffee culture",
+        "content": "Cafés are social hubs in many Spanish-speaking regions. Use café scenes for casual conversation practice and to introduce food/drink vocabulary."
+      }
+    ],
+    "exercises": [
+      {
+        "type": "vocabulary-matching",
+        "instructions": "Match the Spanish words with their English meanings",
+        "items": [
+          {"spanish": "buenos días", "english": "Good morning"},
+          {"spanish": "gracias", "english": "Thank you"},
+          {"spanish": "mucho gusto", "english": "Nice to meet you"},
+          {"spanish": "¿qué hora es?", "english": "What time is it?"}
+        ]
+      },
+      {
+        "type": "dialog-completion",
+        "instructions": "Fill in the blanks with appropriate Spanish responses",
+        "dialog": [
+          {"speaker": "Alex", "text": "¡Buenos días!"},
+          {"speaker": "You", "text": "[        ]"},
+          {"speaker": "Alex", "text": "¿Quieres café?"},
+          {"speaker": "You", "text": "[        ]"}
+        ],
+        "answers": [
+          {"correct": "¡Buenos días!", "alternatives": ["Buenos días"]},
+          {"correct": "Sí, por favor", "alternatives": ["Sí, gracias"]}
+        ]
+      }
+    ],
+    "progressTrackingPoints": {
+      "vocabulary": ["greeting", "time", "basic-conversation"],
+      "grammar": ["formal-speech", "from-location"],
+      "comprehension": 5
+    }
+  },
+  "nextScene": "scene002",
+  "branchOptions": null
+}

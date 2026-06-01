@@ -1,0 +1,77 @@
+{
+  "id": "scene001",
+  "title": "Welcome to Spain",
+  "location": "apartment",
+  "character": "alex",
+  "backgroundImage": "apartment-interior.jpg",
+  "dialog": [
+    {
+      "speaker": "narrator",
+      "text": "You wake up in your new apartment in Spain. The morning sunlight streams through the blinds.",
+      "spanish": null
+    },
+    {
+      "speaker": "alex",
+      "text": "Oh, you're up! Good morning!",
+      "spanish": "¡Buenos días! ¿Te has levantado?",
+      "image": "alex-happy.png"
+    },
+    {
+      "speaker": "player",
+      "text": "Good morning. You must be Alex?",
+      "spanish": "Buenos días. ¿Eres Alex?"
+    },
+    {
+      "speaker": "alex",
+      "text": "That's right! Welcome to Spain! I'm Alex Thompson, your roommate for the month.",
+      "spanish": "¡Así es! Bienvenido a España. Soy Alex Thompson, tu compañero de piso por este mes.",
+      "image": "alex-neutral.png"
+    },
+    {
+      "speaker": "player",
+      "text": "Thanks for having me. I'm excited to be here.",
+      "spanish": "Gracias por recibirme. Estoy emocionado de estar aquí."
+    },
+    {
+      "speaker": "alex",
+      "text": "I made some coffee. Would you like some before we head out? Your language school orientation starts at 10:00.",
+      "spanish": "He hecho café. ¿Quieres antes de que salgamos? La orientación de tu escuela de idiomas empieza a las 10:00.",
+      "image": "alex-coffee.png"
+    },
+    {
+      "speaker": "player",
+      "text": "Coffee sounds great, thanks!",
+      "spanish": "¡El café suena genial, gracias!"
+    },
+    {
+      "speaker": "alex",
+      "text": "It's about 8:30 now. The school is a 15-minute walk from here. I'll show you the way today.",
+      "spanish": "Son las 8:30 aproximadamente. La escuela está a 15 minutos a pie desde aquí. Te mostraré el camino hoy.",
+      "image": "alex-pointing.png"
+    }
+  ],
+  "vocabulary": [
+    {
+      "word": "buenos días",
+      "translation": "Good morning"
+    },
+    {
+      "word": "mucho gusto",
+      "translation": "Nice to meet you"
+    },
+    {
+      "word": "gracias",
+      "translation": "Thank you"
+    },
+    {
+      "word": "escuela",
+      "translation": "School"
+    },
+    {
+      "word": "¿qué hora es?",
+      "translation": "What time is it?"
+    }
+  ],
+  "nextScene": "scene002",
+  "choices": null
+}

@@ -9,7 +9,10 @@ server: {
     '/generate_audio': 'http://localhost:8000',
     '/audio': 'http://localhost:8000',
     '/generate_question': 'http://localhost:8000',
-    '/get_feedback': 'http://localhost:8000'
+    '/get_feedback': 'http://localhost:8000',
+    '/api/visual-novel': 'http://localhost:8000',
+    '/visual-novel-assets': 'http://localhost:8000',
+    '/api/agent': 'http://localhost:8001'
     }
 }
 })
