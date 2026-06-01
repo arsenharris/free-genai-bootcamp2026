@@ -1,10 +1,13 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import os
 from pathlib import Path
 import asyncio
 import json
+import importlib.util
+import sys
 try:
     # If running as a package, e.g. uvicorn backend.api:app
     from .audio_generator import AudioGenerator
@@ -22,6 +25,17 @@ except ImportError:
 
 app = FastAPI(title="Listening Comp API")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create generator instance
 gen = AudioGenerator()
 # Question generator instance
@@ -37,6 +51,7 @@ visual_novel_public_dir = workspace_root / "apps" / "visual-novel" / "public"
 visual_novel_scenes_dir = visual_novel_public_dir / "data" / "scenes"
 visual_novel_mappings_path = visual_novel_public_dir / "data" / "mappings.json"
 visual_novel_story_dir = workspace_root / "apps" / "visual-novel" / "story"
+song_vocab_dir = workspace_root / "apps" / "song-vocab"
 
 if visual_novel_public_dir.exists():
     app.mount(
@@ -82,6 +97,46 @@ async def get_feedback(request: Request):
         if not feedback:
             return JSONResponse({"success": False, "error": "Feedback generation failed"}, status_code=500)
         return JSONResponse({"success": True, "feedback": feedback})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def load_song_vocab_agent_class():
+    if str(song_vocab_dir) not in sys.path:
+        sys.path.insert(0, str(song_vocab_dir))
+
+    agent_path = song_vocab_dir / "agent.py"
+    spec = importlib.util.spec_from_file_location("song_vocab_agent", agent_path)
+    if not spec or not spec.loader:
+        raise RuntimeError("Could not load Song Vocab agent")
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.SongLyricsAgent
+
+
+@app.post("/api/agent")
+async def song_vocab_agent(request: Request):
+    try:
+        payload = await request.json()
+        message = payload.get("message_request", "").strip()
+        if not message:
+            return JSONResponse({"error": "message_request is required"}, status_code=400)
+
+        SongLyricsAgent = load_song_vocab_agent_class()
+        agent = SongLyricsAgent(stream_llm=False, available_ram_gb=16)
+        song_id = await agent.process_request(message)
+
+        lyrics_file = Path(agent.lyrics_path) / f"{song_id}.txt"
+        vocab_file = Path(agent.vocabulary_path) / f"{song_id}.json"
+        if not lyrics_file.exists() or not vocab_file.exists():
+            return JSONResponse({"error": "Lyrics or vocabulary not found"}, status_code=404)
+
+        return JSONResponse({
+            "song_id": song_id,
+            "lyrics": lyrics_file.read_text(encoding="utf-8"),
+            "vocabulary": json.loads(vocab_file.read_text(encoding="utf-8")),
+        })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

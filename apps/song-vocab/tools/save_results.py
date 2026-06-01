@@ -11,7 +11,7 @@ def save_results(song_id: str, lyrics: str, vocabulary: List[Dict[str, Any]], ly
     
     Args:
         song_id (str): ID of the song
-        lyrics (str): Japanese lyrics text
+        lyrics (str): Spanish lyrics text
         vocabulary (List[Dict[str, Any]]): List of vocabulary items
         lyrics_path (Path): Directory to save lyrics files
         vocabulary_path (Path): Directory to save vocabulary files

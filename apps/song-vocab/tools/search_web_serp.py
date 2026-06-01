@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 async def search_web_serp(query: str, max_results: int = 5) -> List[Dict[str, str]]:
     """
-    Search the web for Japanese song lyrics using SERP API.
+    Search the web for Spanish song lyrics using SERP API.
     
     Args:
         query (str): Search query for the song lyrics
@@ -23,9 +23,9 @@ async def search_web_serp(query: str, max_results: int = 5) -> List[Dict[str, st
     """
     logger.info(f"Starting SERP API search for: {query}")
     
-    # Add Japanese-specific keywords to improve results
-    japanese_keywords = ["歌詞", "lyrics", "日本語"]
-    enhanced_query = f"{query} {' '.join(japanese_keywords)}"
+    # Add Spanish-specific keywords to improve results
+    spanish_keywords = ["letra", "letras", "lyrics", "español"]
+    enhanced_query = f"{query} {' '.join(spanish_keywords)}"
     logger.info(f"Enhanced query: {enhanced_query}")
     
     try:
@@ -43,8 +43,8 @@ async def search_web_serp(query: str, max_results: int = 5) -> List[Dict[str, st
             "engine": "google",
             "q": enhanced_query,
             "num": max_results,
-            "hl": "ja",  # Japanese language results
-            "gl": "jp",  # Results from Japan
+            "hl": "es",  # Spanish language results
+            "gl": "es",  # Results from Spain
             "api_key": api_key
         }
         

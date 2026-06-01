@@ -4,7 +4,8 @@ from typing import Dict, Any
 import json
 import logging
 from pathlib import Path
-from agent import SongLyricsAgent
+# Import SongLyricsAgent lazily inside the request handler to avoid import-time
+# failures when optional dependencies (like `ollama`) are not installed.
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -32,8 +33,9 @@ class LyricsRequest(BaseModel):
 async def get_lyrics(request: LyricsRequest) -> Dict[str, Any]:
     logger.info(f"Received request: {request.message_request}")
     try:
-        # Initialize agent
-        logger.debug("Initializing SongLyricsAgent")
+        # Initialize agent (import lazily to avoid import-time failures)
+        logger.debug("Importing and initializing SongLyricsAgent")
+        from agent import SongLyricsAgent
         agent = SongLyricsAgent(stream_llm=False, available_ram_gb=16)
         
         # Process request
@@ -67,18 +69,20 @@ async def get_lyrics(request: LyricsRequest) -> Dict[str, Any]:
         # Log full exception with traceback
         logger.exception("Unhandled error in get_lyrics")
         msg = str(e)
-        # If Ollama isn't running or reachable, return a canned sample response
-        if 'ollama' in msg.lower() or 'failed to connect to ollama' in msg.lower():
-            logger.warning("Ollama unreachable — returning canned sample response for testing")
-            sample = {
-                "song_id": "yoasobi-idol",
-                "lyrics": "これはサンプルの歌詞です。\nLa la la...",
+        # Keep the page usable when Ollama/search services are unavailable.
+        if 'ollama' in msg.lower() or 'failed to connect to ollama' in msg.lower() or 'maximum' in msg.lower():
+            logger.warning("Agent unavailable — returning Spanish sample response for testing")
+            return {
+                "song_id": "sample-spanish-song",
+                "lyrics": "Estas son letras de ejemplo.\nCanto con mi corazón en la noche.\nLa vida sigue con luz y amor.",
                 "vocabulary": [
-                    {"kanji": "君", "romaji": "kimi", "english": "you", "parts": []},
-                    {"kanji": "歌", "romaji": "uta", "english": "song", "parts": []}
+                    {"original": "corazón", "pronunciation": "ko-ra-SON", "english": "heart", "parts": []},
+                    {"original": "noche", "pronunciation": "NO-che", "english": "night", "parts": []},
+                    {"original": "vida", "pronunciation": "BEE-da", "english": "life", "parts": []},
+                    {"original": "luz", "pronunciation": "loos", "english": "light", "parts": []},
+                    {"original": "amor", "pronunciation": "a-MOR", "english": "love", "parts": []}
                 ]
             }
-            return sample
         # If this is a validation error from downstream parsing, return 400
         if isinstance(e, ValidationError):
             raise HTTPException(status_code=400, detail="Invalid data from vocabulary extractor")

@@ -4,7 +4,7 @@ You have access to the following tools:
 - search_web_serp(query: str): Search for Spanish song lyrics using SERP API
 - get_page_content(url: str): Extract content from a webpage
 - extract_vocabulary(text: str): Extract Spanish vocabulary and break it down into original, pronunciation, and parts
-- generate_song_id(title: str): Generate a URL-safe song ID from artist and title
+- generate_song_id(artist: str, title: str): Generate a URL-safe song ID from artist and title
 - save_results(song_id: str, lyrics: str, vocabulary: List[Dict]): Save lyrics and vocabulary to files
 
 search_web_serp -> get_page_content -> extract_vocabulary -> generate_song_id -> save_results
@@ -16,7 +16,7 @@ Follow these rules:
 
 Example interaction:
 Thought: I need to search for the song lyrics first. Let me try SERP API.
-Tool: search_web_serp(query="YOASOBI 夜に駆ける lyrics")
+Tool: search_web_serp(query="Luis Fonsi Despacito letra")
 <wait for result>
 Thought: Got search results. Now I need to extract the content.
 Tool: get_page_content(url="https://example.com/lyrics")

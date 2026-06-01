@@ -1,21 +1,78 @@
 import React, {useMemo, useState} from 'react'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+
 const exampleRequests = [
   'Find lyrics for Luis Fonsi Despacito',
   'Find lyrics for Enrique Iglesias Bailando',
+  'Lyrics: Canto con mi corazón en la noche. La vida sigue con luz y amor.',
 ]
 
+const fallbackTranslations = {
+  amor: 'love',
+  corazón: 'heart',
+  corazon: 'heart',
+  vida: 'life',
+  noche: 'night',
+  luz: 'light',
+  canto: 'I sing',
+  canción: 'song',
+  cancion: 'song',
+  contigo: 'with you',
+  mundo: 'world',
+  sol: 'sun',
+  luna: 'moon',
+}
+
 function getVocabularyKey(item, index){
-  return `${item.kanji || item.word || item.romaji || 'vocab'}-${index}`
+  return `${item.original || item.word || item.spanish || 'vocab'}-${index}`
 }
 
 function formatParts(parts){
   if(!Array.isArray(parts) || parts.length === 0) return 'No parts listed'
   return parts.map(part => {
     if(typeof part === 'string') return part
-    const romaji = Array.isArray(part.romaji) ? part.romaji.join(', ') : part.romaji
-    return [part.kanji, romaji].filter(Boolean).join(' - ')
+    const pronunciation = Array.isArray(part.pronunciation) ? part.pronunciation.join(', ') : part.pronunciation
+    return [part.original, pronunciation].filter(Boolean).join(' - ')
   }).join('; ')
+}
+
+function extractLyricsFromRequest(requestText){
+  const marker = requestText.toLowerCase().indexOf('lyrics:')
+  if(marker >= 0){
+    return requestText.slice(marker + 'lyrics:'.length).trim()
+  }
+
+  return [
+    'Estas son letras de ejemplo para probar Song Vocab.',
+    'Canto con mi corazón en la noche.',
+    'La vida sigue con luz y amor.',
+  ].join('\n')
+}
+
+function buildLocalResult(requestText){
+  const lyrics = extractLyricsFromRequest(requestText)
+  const stopwords = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'de', 'que', 'y', 'en', 'a', 'mi', 'tu', 'su', 'con', 'por', 'para', 'no', 'sí', 'si'])
+  const words = lyrics.toLowerCase().match(/[a-záéíóúüñ]+/gi) || []
+  const seen = new Set()
+  const vocabulary = []
+
+  for(const word of words){
+    if(word.length < 3 || stopwords.has(word) || seen.has(word)) continue
+    seen.add(word)
+    vocabulary.push({
+      original: word,
+      pronunciation: word,
+      english: fallbackTranslations[word] || '',
+      parts: [],
+    })
+  }
+
+  return {
+    song_id: 'local-demo-song',
+    lyrics,
+    vocabulary,
+  }
 }
 
 export default function SongVocab(){
@@ -42,18 +99,28 @@ export default function SongVocab(){
     setResult(null)
 
     try{
-      const response = await fetch('/api/agent', {
+      const requestOptions = {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({message_request: requestText}),
-      })
-      const data = await response.json()
+      }
+      let response
+      try{
+        response = await fetch('/api/agent', requestOptions)
+      }catch(proxyError){
+        response = await fetch(`${API_BASE_URL}/api/agent`, requestOptions)
+      }
+      const contentType = response.headers.get('content-type') || ''
+      const data = contentType.includes('application/json')
+        ? await response.json()
+        : {error: await response.text()}
       if(!response.ok){
         throw new Error(data.detail || data.error || 'Song vocab request failed.')
       }
       setResult(data)
     }catch(err){
-      setError(err.message)
+      setResult(buildLocalResult(requestText))
+      setError(`Backend unavailable (${err.message}). Showing local demo extraction instead.`)
     }finally{
       setLoading(false)
     }
@@ -63,7 +130,7 @@ export default function SongVocab(){
     <div>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>
         <h2>Song Vocab</h2>
-        <div className="badge level-badge">Japanese</div>
+        <div className="badge level-badge">Spanish</div>
       </div>
 
       <div className="panel" style={{marginTop:12}}>
@@ -121,8 +188,8 @@ export default function SongVocab(){
                 {vocabulary.map((item, index) => (
                   <div className="card vocab-card" key={getVocabularyKey(item, index)}>
                     <div className="vocab-card-head">
-                      <strong>{item.kanji || item.word || 'Unknown word'}</strong>
-                      {item.romaji && <span className="badge">{item.romaji}</span>}
+                      <strong>{item.original || item.word || item.spanish || 'Unknown word'}</strong>
+                      {item.pronunciation && <span className="badge">{Array.isArray(item.pronunciation) ? item.pronunciation.join(', ') : item.pronunciation}</span>}
                     </div>
                     {item.english && <p>{item.english}</p>}
                     <div className="muted">{formatParts(item.parts)}</div>

@@ -1,5 +1,12 @@
-import aiohttp
-from bs4 import BeautifulSoup
+try:
+    import aiohttp
+except ImportError:
+    aiohttp = None
+
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    BeautifulSoup = None
 from typing import Dict, Optional
 import re
 import logging
@@ -9,15 +16,28 @@ logger = logging.getLogger(__name__)
 
 async def get_page_content(url: str) -> Dict[str, Optional[str]]:
     """
-    Extract lyrics content from a webpage.
+    Extract lyrics content from a webpage (targeting Spanish lyrics).
     
     Args:
         url (str): URL of the webpage to extract content from
         
     Returns:
-        Dict[str, Optional[str]]: Dictionary containing japanese_lyrics, romaji_lyrics, and metadata
+        Dict[str, Optional[str]]: Dictionary containing spanish_lyrics and metadata
     """
     logger.info(f"Fetching content from URL: {url}")
+    if aiohttp is None or BeautifulSoup is None:
+        missing = []
+        if aiohttp is None:
+            missing.append("aiohttp")
+        if BeautifulSoup is None:
+            missing.append("beautifulsoup4")
+        error_msg = f"Missing optional dependencies: {', '.join(missing)}"
+        logger.warning(error_msg)
+        return {
+            "spanish_lyrics": None,
+            "metadata": error_msg
+        }
+
     try:
         async with aiohttp.ClientSession() as session:
             logger.debug("Making HTTP request...")
@@ -26,8 +46,7 @@ async def get_page_content(url: str) -> Dict[str, Optional[str]]:
                     error_msg = f"Error: HTTP {response.status}"
                     logger.error(error_msg)
                     return {
-                        "japanese_lyrics": None,
-                        "romaji_lyrics": None,
+                        "spanish_lyrics": None,
                         "metadata": error_msg
                     }
                 
@@ -39,8 +58,7 @@ async def get_page_content(url: str) -> Dict[str, Optional[str]]:
         error_msg = f"Error fetching page: {str(e)}"
         logger.error(error_msg, exc_info=True)
         return {
-            "japanese_lyrics": None,
-            "romaji_lyrics": None,
+            "spanish_lyrics": None,
             "metadata": error_msg
         }
 
@@ -48,6 +66,12 @@ def extract_lyrics_from_html(html: str, url: str) -> Dict[str, Optional[str]]:
     """
     Extract lyrics from HTML content based on common patterns in lyrics websites.
     """
+    if BeautifulSoup is None:
+        return {
+            "spanish_lyrics": None,
+            "metadata": "beautifulsoup4 is not installed"
+        }
+
     logger.info("Starting lyrics extraction from HTML")
     soup = BeautifulSoup(html, 'html.parser')
     
@@ -56,21 +80,13 @@ def extract_lyrics_from_html(html: str, url: str) -> Dict[str, Optional[str]]:
     for element in soup(['script', 'style', 'header', 'footer', 'nav']):
         element.decompose()
     
-    # Common patterns for lyrics containers
+    # Common patterns for lyrics containers (generic)
     lyrics_patterns = [
-        # Class patterns
-        {"class_": re.compile(r"lyrics?|kashi|romaji|original", re.I)},
-        {"class_": re.compile(r"song-content|song-text|track-text", re.I)},
-        # ID patterns
-        {"id": re.compile(r"lyrics?|kashi|romaji|original", re.I)},
-        # Common Japanese lyrics sites patterns
-        {"class_": "lyrics_box"},  # Uta-Net
-        {"class_": "hiragana"},    # J-Lyrics
-        {"class_": "romaji"}       # J-Lyrics
+        {"class_": re.compile(r"lyrics?|letra|song-content|song-text|track-text|lyrics_box", re.I)},
+        {"id": re.compile(r"lyrics?|letra|song-content|song-text", re.I)}
     ]
-    
-    japanese_lyrics = None
-    romaji_lyrics = None
+
+    spanish_lyrics = None
     metadata = ""
     
     # Try to find lyrics containers
@@ -84,40 +100,31 @@ def extract_lyrics_from_html(html: str, url: str) -> Dict[str, Optional[str]]:
             text = clean_text(element.get_text())
             logger.debug(f"Extracted text length: {len(text)} chars")
             
-            # Detect if text is primarily Japanese or romaji
-            if is_primarily_japanese(text) and not japanese_lyrics:
-                logger.info("Found Japanese lyrics")
-                japanese_lyrics = text
-            elif is_primarily_romaji(text) and not romaji_lyrics:
-                logger.info("Found romaji lyrics")
-                romaji_lyrics = text
+            # Detect if text is primarily Spanish
+            if is_primarily_spanish(text) and not spanish_lyrics:
+                logger.info("Found Spanish lyrics")
+                spanish_lyrics = text
     
     # If no structured containers found, try to find the largest text block
-    if not japanese_lyrics and not romaji_lyrics:
+    if not spanish_lyrics:
         logger.info("No lyrics found in structured containers, trying fallback method")
         text_blocks = [clean_text(p.get_text()) for p in soup.find_all('p')]
         if text_blocks:
             largest_block = max(text_blocks, key=len)
             logger.debug(f"Found largest text block: {len(largest_block)} chars")
-            
-            if is_primarily_japanese(largest_block):
-                logger.info("Largest block contains Japanese text")
-                japanese_lyrics = largest_block
-            elif is_primarily_romaji(largest_block):
-                logger.info("Largest block contains romaji text")
-                romaji_lyrics = largest_block
+
+            if is_primarily_spanish(largest_block):
+                logger.info("Largest block contains Spanish text")
+                spanish_lyrics = largest_block
     
     result = {
-        "japanese_lyrics": japanese_lyrics,
-        "romaji_lyrics": romaji_lyrics,
+        "spanish_lyrics": spanish_lyrics,
         "metadata": metadata or "Lyrics extracted successfully"
     }
-    
+
     # Log the results
-    if japanese_lyrics:
-        logger.info(f"Found Japanese lyrics ({len(japanese_lyrics)} chars)")
-    if romaji_lyrics:
-        logger.info(f"Found romaji lyrics ({len(romaji_lyrics)} chars)")
+    if spanish_lyrics:
+        logger.info(f"Found Spanish lyrics ({len(spanish_lyrics)} chars)")
     
     return result
 
@@ -128,32 +135,29 @@ def clean_text(text: str) -> str:
     logger.debug(f"Cleaning text of length {len(text)}")
     # Remove HTML entities
     text = re.sub(r'&[a-zA-Z]+;', ' ', text)
-    # Remove multiple spaces and newlines
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'\n\s*\n', '\n', text)
-    # Remove leading/trailing whitespace
-    result = text.strip()
+    # Normalize line endings
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    # Collapse multiple spaces but preserve single newlines
+    text = re.sub(r'[ \t]+', ' ', text)
+    # Collapse multiple blank lines to at most one
+    text = re.sub(r'\n\s*\n+', '\n\n', text)
+    # Trim leading/trailing whitespace on each line
+    lines = [ln.strip() for ln in text.split('\n')]
+    result = '\n'.join([ln for ln in lines if ln])
     logger.debug(f"Text cleaned, new length: {len(result)}")
     return result
 
-def is_primarily_japanese(text: str) -> bool:
+def is_primarily_spanish(text: str) -> bool:
     """
-    Check if text contains primarily Japanese characters.
+    Check if text contains primarily Spanish-language content (Latin letters and common Spanish words).
     """
-    # Count Japanese characters (hiragana, katakana, kanji)
-    japanese_chars = len(re.findall(r'[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]', text))
+    # Count Latin and Spanish-specific characters (including accents and ñ)
+    spanish_chars = len(re.findall(r"[A-Za-zÀ-ÖØ-öø-ÿáéíóúÁÉÍÓÚñÑüÜ]", text))
     total_chars = len(text.strip())
-    ratio = japanese_chars / total_chars if total_chars > 0 else 0
-    logger.debug(f"Japanese character ratio: {ratio:.2f} ({japanese_chars}/{total_chars})")
-    return japanese_chars > 0 and ratio > 0.3
-
-def is_primarily_romaji(text: str) -> bool:
-    """
-    Check if text contains primarily romaji characters.
-    """
-    # Count romaji characters (basic Latin alphabet)
-    romaji_chars = len(re.findall(r'[a-zA-Z]', text))
-    total_chars = len(text.strip())
-    ratio = romaji_chars / total_chars if total_chars > 0 else 0
-    logger.debug(f"Romaji character ratio: {ratio:.2f} ({romaji_chars}/{total_chars})")
-    return romaji_chars > 0 and ratio > 0.3
+    ratio = spanish_chars / total_chars if total_chars > 0 else 0
+    # Also check for common Spanish stopwords to increase confidence
+    stopwords = [' el ', ' la ', ' que ', ' de ', ' y ', ' en ', 'para', 'por', 'no', 'con']
+    text_lower = ' ' + text.lower() + ' '
+    has_stopword = any(w in text_lower for w in stopwords)
+    logger.debug(f"Spanish character ratio: {ratio:.2f} ({spanish_chars}/{total_chars}), stopword={has_stopword}")
+    return spanish_chars > 0 and (ratio > 0.3 or has_stopword)
